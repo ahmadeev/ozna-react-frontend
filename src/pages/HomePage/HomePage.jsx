@@ -1,6 +1,7 @@
 import styles from "./HomePage.module.css"
 import {useEffect, useRef, useState} from "react";
 import LocalTable from "../../components/Table/LocalTable.jsx";
+import Chart from "../../components/Chart/Chart.jsx";
 
 function HomePage() {
 
@@ -20,7 +21,6 @@ function HomePage() {
             const json = JSON.parse(e.data);
             json.dt = Date.parse(json.dt);
             setData(json);
-            // console.log(new Date(Date.parse(json.dt)).toString())
             setValues(prev => {
                 return [ ...prev, json ];
             });
@@ -151,62 +151,6 @@ function HomePage() {
                                     );
                                 }}
                             />
-
-                           {/* <LocalTable
-                                headers={["meow", "kiss"]}
-                                data={[
-                                    {"meow": 1, "kiss": 6},
-                                    {"meow": 2, "kiss": 7},
-                                    {"meow": 3, "kiss": 8},
-                                    {"meow": 4, "kiss": 9},
-                                    {"meow": 5, "kiss": 0},
-                                    {"meow": 1, "kiss": 6},
-                                    {"meow": 2, "kiss": 7},
-                                    {"meow": 3, "kiss": 8},
-                                    {"meow": 4, "kiss": 9},
-                                    {"meow": 5, "kiss": 0},
-
-                                    {"meow": 11, "kiss": 16},
-                                    {"meow": 12, "kiss": 17},
-                                    {"meow": 13, "kiss": 18},
-                                    {"meow": 14, "kiss": 19},
-                                    {"meow": 15, "kiss": 20},
-                                    {"meow": 11, "kiss": 16},
-                                    {"meow": 12, "kiss": 17},
-                                    {"meow": 13, "kiss": 18},
-                                    {"meow": 14, "kiss": 19},
-                                    {"meow": 15, "kiss": 20},
-
-                                    {"meow": 1, "kiss": 6},
-                                    {"meow": 2, "kiss": 7},
-                                    {"meow": 3, "kiss": 8},
-                                    {"meow": 4, "kiss": 9},
-                                    {"meow": 5, "kiss": 0},
-                                    {"meow": 1, "kiss": 6},
-                                    {"meow": 2, "kiss": 7},
-                                    {"meow": 3, "kiss": 8},
-                                    {"meow": 4, "kiss": 9},
-                                    {"meow": 5, "kiss": 0},
-
-                                    {"meow": 11, "kiss": 16},
-                                    {"meow": 12, "kiss": 17},
-                                    {"meow": 13, "kiss": 18},
-                                    {"meow": 14, "kiss": 19},
-                                    {"meow": 15, "kiss": 20},
-                                    {"meow": 11, "kiss": 16},
-                                    {"meow": 12, "kiss": 17},
-                                    {"meow": 13, "kiss": 18},
-                                    {"meow": 14, "kiss": 19},
-                                    {"meow": 15, "kiss": 20},
-
-                                    {"meow": 1, "kiss": 6},
-                                    {"meow": 2, "kiss": 7},
-                                    {"meow": 3, "kiss": 8},
-                                    {"meow": 4, "kiss": 9},
-                                    {"meow": 5, "kiss": 0},
-                                ]}
-                            />*/}
-
                         </div>
                     </div>
                 </div>
@@ -214,7 +158,7 @@ function HomePage() {
                 {/* Нижний блок */}
                 <div className={styles.row}>
                     <div className={styles.column_plug}>
-                        <p>etjwpgewjgpjwhpewojhpowejhew</p>
+                        <Chart data={values.slice(-50)} />
                     </div>
                 </div>
             </div>

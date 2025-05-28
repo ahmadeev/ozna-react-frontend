@@ -1,20 +1,29 @@
 import styles from "./Table.module.css"
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 
-function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
+function LocalTable({ headers, data, renderHeaders=null, renderData=null, renderEmpty=false }) {
     // headers -- ["...", "...", ...]
     // data -- [{...}, {...}, ...]
 
-    const getMaxPage = (data, pageSize) => {
-        return Math.max(0, Math.ceil(data.length / pageSize) - 1);
-    }
+    const rowsOnPage = [10, 25, 50]
 
     const [pageSize, setPageSize] = useState(10);
-    const [currentPage, setCurrentPage] = useState(getMaxPage(data, pageSize));
+
+    // исправления ошибок ререндеров с useMemo()
+    const lastPage = useMemo(() => {
+        return Math.max(0, Math.ceil(data.length / pageSize) - 1);
+    }, [data.length, pageSize]);
+
+    const [currentPage, setCurrentPage] = useState(lastPage);
 
     useEffect(() => {
-        setCurrentPage(getMaxPage(data, pageSize));
-    }, [data, pageSize]);
+        setCurrentPage(lastPage);
+    }, [lastPage]);
+
+    const paginatedData = useMemo(() => {
+        const start = currentPage * pageSize;
+        return data.slice(start, start + pageSize);
+    }, [data, currentPage, pageSize]);
 
     return (
         <>
@@ -38,7 +47,7 @@ function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
                         </thead>
                         <tbody>
                         {
-                            data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).map((item, rowIndex) => (
+                            paginatedData.length > 0 ? paginatedData.map((item, rowIndex) => (
                                 renderData ? renderData(item, rowIndex) : (
                                     <tr key={rowIndex}>
                                         {
@@ -48,11 +57,15 @@ function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
                                         }
                                     </tr>
                                 )
-                            ))
+                            )) : (
+                                <tr>
+                                    <td colSpan={2}>Данные отсутствуют</td>
+                                </tr>
+                            )
                         }
                         {
-                            Array(
-                                Math.max(0, pageSize - data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).length)
+                            renderEmpty && Array(
+                                Math.max(0, pageSize - paginatedData.length)
                             )
                                 .fill(null)
                                 .map((_, index) => (
@@ -81,13 +94,13 @@ function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
                     {currentPage + 1}
                     <button
                         onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={data.length <= (currentPage + 1) * pageSize}
+                        disabled={currentPage === lastPage}
                     >
                         &gt;
                     </button>
                     <button
-                        onClick={() => setCurrentPage(getMaxPage(data, pageSize))}
-                        disabled={data.length <= pageSize || data.length <= (currentPage + 1) * pageSize}
+                        onClick={() => setCurrentPage(lastPage)}
+                        disabled={currentPage === lastPage}
                     >
                         &gt;&gt;
                     </button>
@@ -96,30 +109,30 @@ function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
                 <div className={styles.row}>
                     <button
                         onClick={() => {
-                            const newSize = 10;
+                            const newSize = rowsOnPage[0];
                             setPageSize(newSize);
                             setCurrentPage(Math.floor(currentPage * pageSize / newSize));
                         }}
                     >
-                        10
+                        {rowsOnPage[0]}
                     </button>
                     <button
                         onClick={() => {
-                            const newSize = 50;
+                            const newSize = rowsOnPage[1];
                             setPageSize(newSize);
                             setCurrentPage(Math.floor(currentPage * pageSize / newSize));
                         }}
                     >
-                        50
+                        {rowsOnPage[1]}
                     </button>
                     <button
                         onClick={() => {
-                            const newSize = 100;
+                            const newSize = rowsOnPage[2];
                             setPageSize(newSize);
                             setCurrentPage(Math.floor(currentPage * pageSize / newSize));
                         }}
                     >
-                        100
+                        {rowsOnPage[2]}
                     </button>
                 </div>
             </div>
