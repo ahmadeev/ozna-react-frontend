@@ -1,11 +1,11 @@
 import styles from "./HomePage.module.css"
 import {useEffect, useRef, useState} from "react";
-import LocalTable from "../Table/LocalTable.jsx";
+import LocalTable from "../../components/Table/LocalTable.jsx";
 
 function HomePage() {
 
     const [values, setValues] = useState([]);
-    const [data, setData] = useState({});
+    const [data, setData] = useState({}); // note: получать из стора
 
     const ws = useRef(null);
 
@@ -36,6 +36,7 @@ function HomePage() {
 
         return () => {
             ws.current.close();
+            // note: сохранять в стор
         }
     }, [])
 
