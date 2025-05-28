@@ -5,8 +5,29 @@ import Chart from "../../components/Chart/Chart.jsx";
 
 function HomePage() {
 
-    const [values, setValues] = useState([]);
-    const [data, setData] = useState({}); // note: получать из стора
+    const parameters = ["parameter_1", "parameter_2"];
+    const [parameter, setParameter] = useState(parameters[0]);
+
+/*
+    note: в сторе
+    {
+        "parameter_1": {
+            "min": 0,
+            "max": 99,
+            "frequency": 0
+        }
+    }
+    {
+        "parameter_1": [
+            {"dt": 1395039, "value": 76}
+        ]
+    }
+*/
+
+    const [values, setValues] = useState([]); // note: получать из стора
+
+    // последний полученный ответ (нужен только для одной строки)
+    const [data, setData] = useState({});
 
     const ws = useRef(null);
 
@@ -41,21 +62,26 @@ function HomePage() {
     }, [])
 
     const [minValue, setMinValue] = useState(0);
-    const [isMinValueValid, setIsMinValueValid] = useState(false);
+    const [isMinValueValid, setIsMinValueValid] = useState(true);
 
     const [maxValue, setMaxValue] = useState(99);
-    const [isMaxValueValid, setIsMaxValueValid] = useState(false);
+    const [isMaxValueValid, setIsMaxValueValid] = useState(true);
 
     const [frequency, setFrequency] = useState(1000);
-    const [isFrequencyValid, setIsFrequencyValid] = useState(false);
+    const [isFrequencyValid, setIsFrequencyValid] = useState(true);
 
     useEffect(() => {
         if (minValue > maxValue) {
             setIsMinValueValid(false);
             setIsMaxValueValid(false);
+        } else {
+            setIsMinValueValid(true);
+            setIsMaxValueValid(true);
         }
         if (!frequency.toString().match(/^[1-9]\d*$/)) {
             setIsFrequencyValid(false);
+        } else {
+            setIsFrequencyValid(true);
         }
     }, [minValue, maxValue, frequency]);
 
@@ -75,7 +101,7 @@ function HomePage() {
                                 <label>
                                     min:
                                     <input
-                                        type="number"
+                                        type="text"
                                         value={minValue}
                                         placeholder={"min number"}
                                         onChange={(e) => {
@@ -86,7 +112,7 @@ function HomePage() {
                                 <label>
                                     max:
                                     <input
-                                        type="number"
+                                        type="text"
                                         value={maxValue}
                                         placeholder={"max number"}
                                         onChange={(e) => {
@@ -112,19 +138,19 @@ function HomePage() {
                             <button
                                 onClick={() => {
                                     ws.current.send(JSON.stringify({
-                                        id: "meow",
+                                        id: parameter,
                                         max: maxValue,
                                         min: minValue,
                                         run: true,
                                         frequency: frequency
                                     }));
                                 }}
-                                disabled={isMinValueValid && isMaxValueValid && isFrequencyValid}
+                                disabled={!(isMinValueValid && isMaxValueValid && isFrequencyValid)}
                             >start</button>
                             <button
                                 onClick={() => {
                                     ws.current.send(JSON.stringify({
-                                        id: "meow",
+                                        id: parameter,
                                         max: maxValue,
                                         min: minValue,
                                         run: false,
