@@ -1,25 +1,43 @@
 import styles from "./HomePage.module.css"
 import {useEffect, useRef, useState} from "react";
+import LocalTable from "../Table/LocalTable.jsx";
 
 function HomePage() {
 
+    const [values, setValues] = useState([]);
     const [data, setData] = useState({});
 
     const ws = useRef(null);
 
     useEffect(() => {
         ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
-    }, [])
 
+        /* обработчики сохраняют (замораживают) состояние ? */
 
-    useEffect(() => {
-        ws.current.onopen = (e) => {}
-        ws.current.onmessage = (e) => {
-            setData(JSON.parse(e.data));
+        const handleOpen = (e) => {}
+
+        const handleMessage = (e) => {
+            const json = JSON.parse(e.data);
+            json.dt = Date.parse(json.dt);
+            setData(json);
+            // console.log(new Date(Date.parse(json.dt)).toString())
+            setValues(prev => {
+                return [ ...prev, json ];
+            });
+        };
+
+        const handleError = (e) => {}
+        const handleClose = (e) => {}
+
+        ws.current.onopen = handleOpen;
+        ws.current.onmessage = handleMessage;
+        ws.current.onerror = handleError;
+        ws.current.onclose = handleClose;
+
+        return () => {
+            ws.current.close();
         }
-        ws.current.onerror = (e) => {}
-        ws.current.onclose = (e) => {}
-    },[])
+    }, [])
 
     const [minValue, setMinValue] = useState(0);
     const [isMinValueValid, setIsMinValueValid] = useState(false);
@@ -119,24 +137,75 @@ function HomePage() {
                     {/* Правый блок */}
                     <div className={styles.column}>
                         <div className={styles.row_plug}>
-                            <table className={styles.table}>
-                                <thead>
-                                <tr>
-                                    <th>Дата</th>
-                                    <th>Значение</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td>
-                                        {data.dt}
-                                    </td>
-                                    <td>
-                                        {data.value}
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+
+                            <LocalTable
+                                headers={["dt", "value"]}
+                                data={values}
+                                renderData={(item, rowIndex) => {
+                                    return (
+                                        <tr key={rowIndex}>
+                                            <td>{new Date(parseInt(item.dt)).toUTCString()}</td>
+                                            <td>{item.value}</td>
+                                        </tr>
+                                    );
+                                }}
+                            />
+
+                           {/* <LocalTable
+                                headers={["meow", "kiss"]}
+                                data={[
+                                    {"meow": 1, "kiss": 6},
+                                    {"meow": 2, "kiss": 7},
+                                    {"meow": 3, "kiss": 8},
+                                    {"meow": 4, "kiss": 9},
+                                    {"meow": 5, "kiss": 0},
+                                    {"meow": 1, "kiss": 6},
+                                    {"meow": 2, "kiss": 7},
+                                    {"meow": 3, "kiss": 8},
+                                    {"meow": 4, "kiss": 9},
+                                    {"meow": 5, "kiss": 0},
+
+                                    {"meow": 11, "kiss": 16},
+                                    {"meow": 12, "kiss": 17},
+                                    {"meow": 13, "kiss": 18},
+                                    {"meow": 14, "kiss": 19},
+                                    {"meow": 15, "kiss": 20},
+                                    {"meow": 11, "kiss": 16},
+                                    {"meow": 12, "kiss": 17},
+                                    {"meow": 13, "kiss": 18},
+                                    {"meow": 14, "kiss": 19},
+                                    {"meow": 15, "kiss": 20},
+
+                                    {"meow": 1, "kiss": 6},
+                                    {"meow": 2, "kiss": 7},
+                                    {"meow": 3, "kiss": 8},
+                                    {"meow": 4, "kiss": 9},
+                                    {"meow": 5, "kiss": 0},
+                                    {"meow": 1, "kiss": 6},
+                                    {"meow": 2, "kiss": 7},
+                                    {"meow": 3, "kiss": 8},
+                                    {"meow": 4, "kiss": 9},
+                                    {"meow": 5, "kiss": 0},
+
+                                    {"meow": 11, "kiss": 16},
+                                    {"meow": 12, "kiss": 17},
+                                    {"meow": 13, "kiss": 18},
+                                    {"meow": 14, "kiss": 19},
+                                    {"meow": 15, "kiss": 20},
+                                    {"meow": 11, "kiss": 16},
+                                    {"meow": 12, "kiss": 17},
+                                    {"meow": 13, "kiss": 18},
+                                    {"meow": 14, "kiss": 19},
+                                    {"meow": 15, "kiss": 20},
+
+                                    {"meow": 1, "kiss": 6},
+                                    {"meow": 2, "kiss": 7},
+                                    {"meow": 3, "kiss": 8},
+                                    {"meow": 4, "kiss": 9},
+                                    {"meow": 5, "kiss": 0},
+                                ]}
+                            />*/}
+
                         </div>
                     </div>
                 </div>
