@@ -3,3 +3,39 @@
     min-width: 100%;
     text-align: center;
 }
+
+.table_wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    /*justify-content: space-evenly;*/
+    /*gap: 1rem;*/
+}
+
+.table_wrapper div {
+    margin: 0.5rem 0 0.5rem 0; /* верх право низ лево */
+}
+
+.row {
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+
+    justify-content: center;
+    align-items: center;
+}
+
+.column {
+    width: 100%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    justify-content: center;
+    align-items: center;
+}

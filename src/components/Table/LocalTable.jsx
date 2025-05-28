@@ -18,106 +18,110 @@ function LocalTable({ headers, data, renderHeaders=null, renderData=null }) {
 
     return (
         <>
-            <table className={styles.table}>
-                <thead>
-                {
-                    renderHeaders ? renderHeaders(headers) : (
-                        <tr>
-                            {
-                                headers.map((header, index) => (
-                                    <th key={index}>
-                                        {header}
-                                    </th>
+            <div className={styles.table_wrapper}>
+                <div>
+                    <table className={styles.table}>
+                        <thead>
+                        {
+                            renderHeaders ? renderHeaders(headers) : (
+                                <tr>
+                                    {
+                                        headers.map((header, index) => (
+                                            <th key={index}>
+                                                {header}
+                                            </th>
+                                        ))
+                                    }
+                                </tr>
+                            )
+                        }
+                        </thead>
+                        <tbody>
+                        {
+                            data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).map((item, rowIndex) => (
+                                renderData ? renderData(item, rowIndex) : (
+                                    <tr key={rowIndex}>
+                                        {
+                                            headers.map((header, colIndex) => (
+                                                <td key={colIndex}>{item[header]}</td>
+                                            ))
+                                        }
+                                    </tr>
+                                )
+                            ))
+                        }
+                        {
+                            Array(
+                                Math.max(0, pageSize - data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).length)
+                            )
+                                .fill(null)
+                                .map((_, index) => (
+                                    <tr key={index}>
+                                        <td colSpan={headers.length}>&nbsp;</td>
+                                    </tr>
                                 ))
-                            }
-                        </tr>
-                    )
-                }
-                </thead>
-                <tbody>
-                {
-                    data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).map((item, rowIndex) => (
-                        renderData ? renderData(item, rowIndex) : (
-                            <tr key={rowIndex}>
-                                {
-                                    headers.map((header, colIndex) => (
-                                        <td key={colIndex}>{item[header]}</td>
-                                    ))
-                                }
-                            </tr>
-                        )
-                    ))
-                }
-                {
-                    Array(
-                        Math.max(0, pageSize - data.slice(pageSize * currentPage, pageSize * (currentPage + 1)).length)
-                    )
-                        .fill(null)
-                        .map((_, index) => (
-                            <tr key={index}>
-                                <td colSpan={headers.length}>&nbsp;</td>
-                            </tr>
-                        ))
-                }
-                </tbody>
-            </table>
+                        }
+                        </tbody>
+                    </table>
+                </div>
 
-            <div>
-                <button
-                    onClick={() => setCurrentPage(0)}
-                    disabled={currentPage <= 0}
-                >
-                    &lt;&lt;
-                </button>
-                <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage <= 0}
-                >
-                    &lt;
-                </button>
-                {currentPage + 1}
-                <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={data.length <= (currentPage + 1) * pageSize}
-                >
-                    &gt;
-                </button>
-                <button
-                    onClick={() => setCurrentPage(getMaxPage(data, pageSize))}
-                    disabled={data.length <= pageSize || data.length <= (currentPage + 1) * pageSize}
-                >
-                    &gt;&gt;
-                </button>
-            </div>
+                <div className={styles.row}>
+                    <button
+                        onClick={() => setCurrentPage(0)}
+                        disabled={currentPage <= 0}
+                    >
+                        &lt;&lt;
+                    </button>
+                    <button
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage <= 0}
+                    >
+                        &lt;
+                    </button>
+                    {currentPage + 1}
+                    <button
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={data.length <= (currentPage + 1) * pageSize}
+                    >
+                        &gt;
+                    </button>
+                    <button
+                        onClick={() => setCurrentPage(getMaxPage(data, pageSize))}
+                        disabled={data.length <= pageSize || data.length <= (currentPage + 1) * pageSize}
+                    >
+                        &gt;&gt;
+                    </button>
+                </div>
 
-            <div>
-                <button
-                    onClick={() => {
-                        const newSize = 10;
-                        setPageSize(newSize);
-                        setCurrentPage(Math.floor(currentPage * pageSize / newSize));
-                    }}
-                >
-                    10
-                </button>
-                <button
-                    onClick={() => {
-                        const newSize = 50;
-                        setPageSize(newSize);
-                        setCurrentPage(Math.floor(currentPage * pageSize / newSize));
-                    }}
-                >
-                    50
-                </button>
-                <button
-                    onClick={() => {
-                        const newSize = 100;
-                        setPageSize(newSize);
-                        setCurrentPage(Math.floor(currentPage * pageSize / newSize));
-                    }}
-                >
-                    100
-                </button>
+                <div className={styles.row}>
+                    <button
+                        onClick={() => {
+                            const newSize = 10;
+                            setPageSize(newSize);
+                            setCurrentPage(Math.floor(currentPage * pageSize / newSize));
+                        }}
+                    >
+                        10
+                    </button>
+                    <button
+                        onClick={() => {
+                            const newSize = 50;
+                            setPageSize(newSize);
+                            setCurrentPage(Math.floor(currentPage * pageSize / newSize));
+                        }}
+                    >
+                        50
+                    </button>
+                    <button
+                        onClick={() => {
+                            const newSize = 100;
+                            setPageSize(newSize);
+                            setCurrentPage(Math.floor(currentPage * pageSize / newSize));
+                        }}
+                    >
+                        100
+                    </button>
+                </div>
             </div>
         </>
     )

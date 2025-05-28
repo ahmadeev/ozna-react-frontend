@@ -66,7 +66,7 @@ function HomePage() {
                     {/* Левый блок */}
                     <div className={styles.column}>
                         <div className={styles.row_plug}>
-                            <h3>Текущее значение: {data.value}</h3>
+                            <h3>Текущее значение: {data.value || "<отсутствует>"}</h3>
                         </div>
 
                         <div className={styles.row_plug}>
