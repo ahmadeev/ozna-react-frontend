@@ -34,7 +34,7 @@ function HomePage() {
 
     const ws = useRef(null);
     const timer = useRef(null);
-    const pingInterval = 1_000;
+    const pingInterval = 75_000;
 
     useEffect(() => {
         ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
@@ -114,6 +114,48 @@ function HomePage() {
     return (
         <>
             <div className={styles.container}>
+                {/* --- note */}
+                <div className={styles.row} style={{ padding: "0", gap: "0" }}>
+                    <div
+                        className={styles.column_plug}
+                        style={{
+                            height: "3rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            position: "relative"
+                        }}
+                    >
+                        <a style={{textDecoration: parameter === parameters[0] ? "underline" : "none"}}>Parameter 1</a>
+                        <a
+                            onClick={() => {
+                                setParameter(parameters[0]);
+                            }}
+                            style={{ textDecoration: parameter === parameters[1] ? "underline" : "none", width: "100%", height: "100%", position: "absolute", top: "0", left: "0" }}
+                        />
+                    </div>
+                    <div
+                        className={styles.column_plug}
+                        style={{
+                            height: "3rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            position: "relative"
+                        }}
+                    >
+                        <a style={{ textDecoration: parameter === parameters[1] ? "underline" : "none" }}>Parameter 2</a>
+                        <a
+                            onClick={() => {
+                                setParameter(parameters[1]);
+                            }}
+                           style={{ textDecoration: parameter === parameters[1] ? "underline" : "none", width: "100%", height: "100%", position: "absolute", top: "0", left: "0" }}
+                        />
+                    </div>
+                </div>
+                {/* --- */}
                 {/* Верхний блок */}
                 <div className={styles.row}>
                     {/* Левый блок */}
@@ -123,20 +165,18 @@ function HomePage() {
                         </div>
 
                         <div className={styles.row_plug}>
-                            <div className={styles.column}>
+                            <div className={styles.column_grid}>
                                 <label>
-                                    min:
+                                    <span>min:</span>
                                     <input
                                         type="text"
                                         value={minValue}
-                                        placeholder={"min number"}
-                                        onChange={(e) => {
-                                            setMinValue(e.target.value);
-                                        }}
+                                        placeholder="min number"
+                                        onChange={(e) => setMinValue(e.target.value)}
                                     />
                                 </label>
                                 <label>
-                                    max:
+                                    <span>max:</span>
                                     <input
                                         type="text"
                                         value={maxValue}
@@ -147,7 +187,7 @@ function HomePage() {
                                     />
                                 </label>
                                 <label>
-                                    frequency:
+                                    <span>frequency:</span>
                                     <input
                                         type="text"
                                         value={frequency}
@@ -172,6 +212,7 @@ function HomePage() {
                                     }));
                                 }}
                                 disabled={!(isMinMaxValuesValid && isFrequencyValid)}
+                                className={styles.button}
                             >start</button>
                             <button
                                 onClick={() => {
@@ -183,6 +224,7 @@ function HomePage() {
                                         frequency: frequency
                                     }));
                                 }}
+                                className={styles.button}
                             >stop</button>
                         </div>
                     </div>
