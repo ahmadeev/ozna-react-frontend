@@ -7,27 +7,13 @@ import {observer} from "mobx-react-lite";
 
 const HomePage = observer(() => {
 
+    const GRAPH_NUMBER_OF_ELEMENTS = 50;
+
     const minIntegerValue = -2_147_483_648;
     const maxIntegerValue = 2_147_483_647;
 
     const parameters = ["parameter_1", "parameter_2"];
     const [parameter, setParameter] = useState(parameters[0]);
-
-/*
-    note: в сторе
-    {
-        "parameter_1": {
-            "min": 0,
-            "max": 99,
-            "frequency": 0
-        }
-    }
-    {
-        "parameter_1": [
-            {"dt": 1395039, "value": 76}
-        ]
-    }
-*/
 
     const [values, setValues] = useState([]); // note: получать из стора
 
@@ -100,8 +86,8 @@ const HomePage = observer(() => {
         return number >= minIntegerValue && number <= maxIntegerValue;
     }, [minIntegerValue, maxIntegerValue])
 
-    useEffect(() => {
-        /* note: плохо (каждый раз попытка обновления стора на изменение параметров) */
+/*    useEffect(() => {
+        /!* note: плохо (каждый раз попытка обновления стора на изменение параметров) *!/
         const settings = dataStore.generationSettings[parameter];
 
         // при первой загрузке:
@@ -116,11 +102,33 @@ const HomePage = observer(() => {
             setMaxValue(settings.maxValue);
             setFrequency(settings.frequency);
         } else {
-            console.log("апдейт settings в сторе ", parameter)
-            console.log(dataStore.generationSettings[parameter]);
-            dataStore.updateGenerationSettings(parameter, {minValue, maxValue, frequency});
+            const settings = {minValue, maxValue, frequency};
+            dataStore.updateGenerationSettings(parameter, settings);
         }
-    }, [parameter, minValue, maxValue, frequency]);
+    }, [parameter]);*/
+
+    // храним
+    const settingsRef = useRef({ minValue, maxValue, frequency });
+
+    // и меняем без ререндера
+    useEffect(() => {
+        settingsRef.current = { minValue, maxValue, frequency };
+    }, [minValue, maxValue, frequency]);
+
+    useEffect(() => {
+        // значения из стора
+        const settings = dataStore.generationSettings[parameter];
+        if (settings) {
+            setMinValue(settings.minValue);
+            setMaxValue(settings.maxValue);
+            setFrequency(settings.frequency);
+        }
+
+        return () => {
+            // значения в стор
+            dataStore.updateGenerationSettings(parameter, settingsRef.current);
+        };
+    }, [parameter]);
 
     const isMinValueValid = useMemo(() => {
         return minValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
@@ -138,8 +146,6 @@ const HomePage = observer(() => {
     return (
         <>
             <div className={styles.container}>
-                <h2>{dataStore.counter}</h2>
-                <button onClick={() => dataStore.increment()}>++</button>
                 {/* --- note */}
                 <div className={styles.row} style={{ padding: "0", gap: "0" }}>
                     <div
@@ -187,7 +193,7 @@ const HomePage = observer(() => {
                     {/* Левый блок */}
                     <div className={styles.column}>
                         <div className={styles.row_plug}>
-                            <h3>Текущее значение: {data.value || "<отсутствует>"}</h3>
+                            <h3>Текущее значение: {<input type="text" disabled value={data.value || "<отсутствует>"} />}</h3>
                         </div>
 
                         <div className={styles.row_plug}>
@@ -200,13 +206,6 @@ const HomePage = observer(() => {
                                         placeholder="min number"
                                         onChange={(e) => {
                                             setMinValue(e.target.value);
-                                            /* note: плохо */
-                                            dataStore.updateGenerationSettings(parameter, {
-                                                ...dataStore.generationSettings[parameter],
-                                                minValue: e.target.value
-                                            })
-                                            console.log("апдейт settings в сторе ", parameter)
-                                            console.log(dataStore.generationSettings[parameter]);
                                         }}
                                     />
                                 </label>
@@ -218,12 +217,6 @@ const HomePage = observer(() => {
                                         placeholder={"max number"}
                                         onChange={(e) => {
                                             setMaxValue(e.target.value);
-                                            dataStore.updateGenerationSettings(parameter, {
-                                                ...dataStore.generationSettings[parameter],
-                                                maxValue: e.target.value
-                                            })
-                                            console.log("апдейт settings в сторе ", parameter)
-                                            console.log(dataStore.generationSettings[parameter]);
                                         }}
                                     />
                                 </label>
@@ -235,12 +228,6 @@ const HomePage = observer(() => {
                                         placeholder={"frequency"}
                                         onChange={(e) => {
                                             setFrequency(e.target.value);
-                                            dataStore.updateGenerationSettings(parameter, {
-                                                ...dataStore.generationSettings[parameter],
-                                                frequency: e.target.value
-                                            })
-                                            console.log("апдейт settings в сторе ", parameter)
-                                            console.log(dataStore.generationSettings[parameter]);
                                         }}
                                     />
                                 </label>
@@ -299,7 +286,7 @@ const HomePage = observer(() => {
                 {/* Нижний блок */}
                 <div className={styles.row}>
                     <div className={styles.column_plug}>
-                        <Chart data={values.slice(-50)} />
+                        <Chart data={values.slice(-GRAPH_NUMBER_OF_ELEMENTS)} />
                     </div>
                 </div>
             </div>
