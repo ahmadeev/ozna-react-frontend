@@ -1,9 +1,11 @@
 import styles from "./HomePage.module.css"
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import LocalTable from "../../components/Table/LocalTable.jsx";
 import Chart from "../../components/Chart/Chart.jsx";
+import dataStore from "../../stores/DataStore.js";
+import {observer} from "mobx-react-lite";
 
-function HomePage() {
+const HomePage = observer(() => {
 
     const minIntegerValue = -2_147_483_648;
     const maxIntegerValue = 2_147_483_647;
@@ -38,6 +40,7 @@ function HomePage() {
 
     useEffect(() => {
         ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
+        console.log("открыт вебсокет")
 
         /* обработчики сохраняют (замораживают) состояние ? */
 
@@ -93,27 +96,50 @@ function HomePage() {
     const [maxValue, setMaxValue] = useState("99");
     const [frequency, setFrequency] = useState("1000");
 
-    const isValidInteger = (number) => {
+    const isValidInteger = useCallback((number) => {
         return number >= minIntegerValue && number <= maxIntegerValue;
-    }
+    }, [minIntegerValue, maxIntegerValue])
+
+    useEffect(() => {
+        /* note: плохо (каждый раз попытка обновления стора на изменение параметров) */
+        const settings = dataStore.generationSettings[parameter];
+
+        // при первой загрузке:
+        // не нашли settings -> апдейт в сторе -> вынужденный mobx ререндер компонента
+        // при второй загрузке:
+        // нашли settings -> установили локально
+
+        if (settings) {
+            console.log("установка settings локально ", parameter)
+            console.log(dataStore.generationSettings[parameter]);
+            setMinValue(settings.minValue);
+            setMaxValue(settings.maxValue);
+            setFrequency(settings.frequency);
+        } else {
+            console.log("апдейт settings в сторе ", parameter)
+            console.log(dataStore.generationSettings[parameter]);
+            dataStore.updateGenerationSettings(parameter, {minValue, maxValue, frequency});
+        }
+    }, [parameter, minValue, maxValue, frequency]);
 
     const isMinValueValid = useMemo(() => {
         return minValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
-    }, [minValue, maxValue]);
+    }, [minValue, maxValue, isValidInteger]);
     const isMaxValueValid = useMemo(() => {
         return maxValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
-    }, [minValue, maxValue]);
+    }, [minValue, maxValue, isValidInteger]);
     const isMinMaxValuesValid = useMemo(() => {
         return isMinValueValid && isMaxValueValid;
     }, [isMinValueValid, isMaxValueValid]);
     const isFrequencyValid = useMemo(() => {
         return frequency.match(/^[1-9]\d*$/) && parseInt(frequency) > 0 && isValidInteger(frequency);
-    }, [frequency]);
-
+    }, [frequency, isValidInteger]);
 
     return (
         <>
             <div className={styles.container}>
+                <h2>{dataStore.counter}</h2>
+                <button onClick={() => dataStore.increment()}>++</button>
                 {/* --- note */}
                 <div className={styles.row} style={{ padding: "0", gap: "0" }}>
                     <div
@@ -172,7 +198,16 @@ function HomePage() {
                                         type="text"
                                         value={minValue}
                                         placeholder="min number"
-                                        onChange={(e) => setMinValue(e.target.value)}
+                                        onChange={(e) => {
+                                            setMinValue(e.target.value);
+                                            /* note: плохо */
+                                            dataStore.updateGenerationSettings(parameter, {
+                                                ...dataStore.generationSettings[parameter],
+                                                minValue: e.target.value
+                                            })
+                                            console.log("апдейт settings в сторе ", parameter)
+                                            console.log(dataStore.generationSettings[parameter]);
+                                        }}
                                     />
                                 </label>
                                 <label>
@@ -183,6 +218,12 @@ function HomePage() {
                                         placeholder={"max number"}
                                         onChange={(e) => {
                                             setMaxValue(e.target.value);
+                                            dataStore.updateGenerationSettings(parameter, {
+                                                ...dataStore.generationSettings[parameter],
+                                                maxValue: e.target.value
+                                            })
+                                            console.log("апдейт settings в сторе ", parameter)
+                                            console.log(dataStore.generationSettings[parameter]);
                                         }}
                                     />
                                 </label>
@@ -194,6 +235,12 @@ function HomePage() {
                                         placeholder={"frequency"}
                                         onChange={(e) => {
                                             setFrequency(e.target.value);
+                                            dataStore.updateGenerationSettings(parameter, {
+                                                ...dataStore.generationSettings[parameter],
+                                                frequency: e.target.value
+                                            })
+                                            console.log("апдейт settings в сторе ", parameter)
+                                            console.log(dataStore.generationSettings[parameter]);
                                         }}
                                     />
                                 </label>
@@ -258,6 +305,6 @@ function HomePage() {
             </div>
         </>
     )
-}
+})
 
 export default HomePage;
