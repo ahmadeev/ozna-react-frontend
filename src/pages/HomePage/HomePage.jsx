@@ -33,21 +33,45 @@ function HomePage() {
     const [data, setData] = useState({});
 
     const ws = useRef(null);
+    const timer = useRef(null);
+    const pingInterval = 1_000;
 
     useEffect(() => {
         ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
 
         /* обработчики сохраняют (замораживают) состояние ? */
 
-        const handleOpen = (e) => {}
+        const startPinging = () => {
+            if (timer.current) clearInterval(timer.current);
+
+            const sendPing = () => {
+                if (ws.current?.readyState === WebSocket.OPEN) {
+                    ws.current.send(JSON.stringify({ type: 'ping' }));
+                }
+            };
+
+            sendPing();
+
+            timer.current = setInterval(sendPing, pingInterval);
+        };
+
+        const handleOpen = (e) => {
+            startPinging();
+        }
 
         const handleMessage = (e) => {
             const json = JSON.parse(e.data);
-            json.dt = Date.parse(json.dt);
-            setData(json);
-            setValues(prev => {
-                return [ ...prev, json ];
-            });
+
+            if (json.type && json.type === "pong") return;
+
+            // wa: грубо
+            if (Object.keys(json).length === 3 && json.id && json.dt && json.value) {
+                json.dt = Date.parse(json.dt);
+                setData(json);
+                setValues(prev => {
+                    return [ ...prev, json ];
+                });
+            }
         };
 
         const handleError = (e) => {}
@@ -59,7 +83,8 @@ function HomePage() {
         ws.current.onclose = handleClose;
 
         return () => {
-            ws.current.close();
+            if (timer.current) clearInterval(timer.current);
+            if (ws.current) ws.current.close();
             // note: сохранять в стор
         }
     }, [])
