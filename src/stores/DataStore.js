@@ -1,4 +1,4 @@
-import {makeAutoObservable} from "mobx";
+import {action, makeAutoObservable} from "mobx";
 
 class DataStore {
     constructor() {
@@ -7,6 +7,8 @@ class DataStore {
 
     /* ----------
         note: в сторе
+
+        * generationSettings
         {
             "parameter_1": {
                 "min": 0,
@@ -14,6 +16,7 @@ class DataStore {
                 "frequency": 0
             }
         }
+        * generatedData
         {
             "parameter_1": [
                 {"id": "hreyh", "dt": 1395039, "value": 76}
@@ -33,10 +36,13 @@ class DataStore {
 
     generatedData = {};
 
-    updateGenerationData(parameter, data) {
-        this.generatedData[parameter] = [...this.generatedData[parameter], data];
+    updateGeneratedData(parameter, data) {
         console.log("обновление вычисленных значений", parameter);
         console.log(this.generatedData[parameter]);
+
+        if (!data || data.length === 0) return;
+
+        this.generatedData[parameter] = [...data];
     }
 }
 

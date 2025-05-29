@@ -17,16 +17,12 @@ const HomePage = observer(() => {
 
     const [values, setValues] = useState([]); // note: получать из стора
 
-    // последний полученный ответ (нужен только для одной строки)
-    const [data, setData] = useState({});
-
     const ws = useRef(null);
     const timer = useRef(null);
     const pingInterval = 75_000;
 
     useEffect(() => {
         ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
-        console.log("открыт вебсокет")
 
         /* обработчики сохраняют (замораживают) состояние ? */
 
@@ -56,7 +52,6 @@ const HomePage = observer(() => {
             // wa: грубо
             if (Object.keys(json).length === 3 && json.id && json.dt && json.value) {
                 json.dt = Date.parse(json.dt);
-                setData(json);
                 setValues(prev => {
                     return [ ...prev, json ];
                 });
@@ -82,30 +77,10 @@ const HomePage = observer(() => {
     const [maxValue, setMaxValue] = useState("99");
     const [frequency, setFrequency] = useState("1000");
 
+    // повторная инициализация функции только при изменении зависимостей
     const isValidInteger = useCallback((number) => {
         return number >= minIntegerValue && number <= maxIntegerValue;
     }, [minIntegerValue, maxIntegerValue])
-
-/*    useEffect(() => {
-        /!* note: плохо (каждый раз попытка обновления стора на изменение параметров) *!/
-        const settings = dataStore.generationSettings[parameter];
-
-        // при первой загрузке:
-        // не нашли settings -> апдейт в сторе -> вынужденный mobx ререндер компонента
-        // при второй загрузке:
-        // нашли settings -> установили локально
-
-        if (settings) {
-            console.log("установка settings локально ", parameter)
-            console.log(dataStore.generationSettings[parameter]);
-            setMinValue(settings.minValue);
-            setMaxValue(settings.maxValue);
-            setFrequency(settings.frequency);
-        } else {
-            const settings = {minValue, maxValue, frequency};
-            dataStore.updateGenerationSettings(parameter, settings);
-        }
-    }, [parameter]);*/
 
     // храним
     const settingsRef = useRef({ minValue, maxValue, frequency });
@@ -115,18 +90,43 @@ const HomePage = observer(() => {
         settingsRef.current = { minValue, maxValue, frequency };
     }, [minValue, maxValue, frequency]);
 
+    const latestValues = useRef(values);
+
     useEffect(() => {
+        latestValues.current = values;
+        console.log(latestValues.current)
+    }, [values]);
+
+    useEffect(() => {
+        // при первой загрузке:
+        // не нашли settings -- ? --> апдейт в сторе -> вынужденный mobx ререндер компонента
+        // при второй загрузке:
+        // нашли settings -> установили локально
+
         // значения из стора
         const settings = dataStore.generationSettings[parameter];
         if (settings) {
-            setMinValue(settings.minValue);
-            setMaxValue(settings.maxValue);
-            setFrequency(settings.frequency);
+            setMinValue(settings.minValue || "0");
+            setMaxValue(settings.maxValue || "99");
+            setFrequency(settings.frequency || "1000");
+        } else {
+            setMinValue("0");
+            setMaxValue("99");
+            setFrequency("1000");
+        }
+
+        const data = dataStore.generatedData[parameter];
+        if (data) {
+            setValues(data);
+        } else {
+            setValues([]);
         }
 
         return () => {
             // значения в стор
             dataStore.updateGenerationSettings(parameter, settingsRef.current);
+
+            dataStore.updateGeneratedData(parameter, latestValues.current);
         };
     }, [parameter]);
 
@@ -193,12 +193,12 @@ const HomePage = observer(() => {
                     {/* Левый блок */}
                     <div className={styles.column}>
                         <div className={styles.row_plug}>
-                            <h3>Текущее значение: {<input type="text" disabled value={data.value || "<отсутствует>"} />}</h3>
+                            <h3>Текущее значение: {<input type="text" disabled value={values[values.length - 1]?.value || "<отсутствует>"}/>}</h3>
                         </div>
 
                         <div className={styles.row_plug}>
                             <div className={styles.column_grid}>
-                                <label>
+                            <label>
                                     <span>min:</span>
                                     <input
                                         type="text"
