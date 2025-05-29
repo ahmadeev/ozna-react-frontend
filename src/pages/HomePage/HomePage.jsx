@@ -1,9 +1,12 @@
 import styles from "./HomePage.module.css"
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import LocalTable from "../../components/Table/LocalTable.jsx";
 import Chart from "../../components/Chart/Chart.jsx";
 
 function HomePage() {
+
+    const minIntegerValue = -2_147_483_648;
+    const maxIntegerValue = 2_147_483_647;
 
     const parameters = ["parameter_1", "parameter_2"];
     const [parameter, setParameter] = useState(parameters[0]);
@@ -61,29 +64,27 @@ function HomePage() {
         }
     }, [])
 
-    const [minValue, setMinValue] = useState(0);
-    const [isMinValueValid, setIsMinValueValid] = useState(true);
+    const [minValue, setMinValue] = useState("0");
+    const [maxValue, setMaxValue] = useState("99");
+    const [frequency, setFrequency] = useState("1000");
 
-    const [maxValue, setMaxValue] = useState(99);
-    const [isMaxValueValid, setIsMaxValueValid] = useState(true);
+    const isValidInteger = (number) => {
+        return number >= minIntegerValue && number <= maxIntegerValue;
+    }
 
-    const [frequency, setFrequency] = useState(1000);
-    const [isFrequencyValid, setIsFrequencyValid] = useState(true);
+    const isMinValueValid = useMemo(() => {
+        return minValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
+    }, [minValue, maxValue]);
+    const isMaxValueValid = useMemo(() => {
+        return maxValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
+    }, [minValue, maxValue]);
+    const isMinMaxValuesValid = useMemo(() => {
+        return isMinValueValid && isMaxValueValid;
+    }, [isMinValueValid, isMaxValueValid]);
+    const isFrequencyValid = useMemo(() => {
+        return frequency.match(/^[1-9]\d*$/) && parseInt(frequency) > 0 && isValidInteger(frequency);
+    }, [frequency]);
 
-    useEffect(() => {
-        if (minValue > maxValue) {
-            setIsMinValueValid(false);
-            setIsMaxValueValid(false);
-        } else {
-            setIsMinValueValid(true);
-            setIsMaxValueValid(true);
-        }
-        if (!frequency.toString().match(/^[1-9]\d*$/)) {
-            setIsFrequencyValid(false);
-        } else {
-            setIsFrequencyValid(true);
-        }
-    }, [minValue, maxValue, frequency]);
 
     return (
         <>
@@ -105,7 +106,7 @@ function HomePage() {
                                         value={minValue}
                                         placeholder={"min number"}
                                         onChange={(e) => {
-                                            setMinValue(parseInt(e.target.value));
+                                            setMinValue(e.target.value);
                                         }}
                                     />
                                 </label>
@@ -116,7 +117,7 @@ function HomePage() {
                                         value={maxValue}
                                         placeholder={"max number"}
                                         onChange={(e) => {
-                                            setMaxValue(parseInt(e.target.value));
+                                            setMaxValue(e.target.value);
                                         }}
                                     />
                                 </label>
@@ -127,7 +128,7 @@ function HomePage() {
                                         value={frequency}
                                         placeholder={"frequency"}
                                         onChange={(e) => {
-                                            setFrequency(parseInt(e.target.value));
+                                            setFrequency(e.target.value);
                                         }}
                                     />
                                 </label>
@@ -145,7 +146,7 @@ function HomePage() {
                                         frequency: frequency
                                     }));
                                 }}
-                                disabled={!(isMinValueValid && isMaxValueValid && isFrequencyValid)}
+                                disabled={!(isMinMaxValuesValid && isFrequencyValid)}
                             >start</button>
                             <button
                                 onClick={() => {
