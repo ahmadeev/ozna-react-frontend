@@ -30,9 +30,9 @@ const HomePage = observer(() => {
     }*/
 
     useEffect(() => {
-        return (
-            webSocketStore.closeWebSockets(parameters)
-        );
+        return () => {
+            webSocketStore.closeWebSockets(parameters);
+        }
     }, [])
 
     useEffect(() => {
