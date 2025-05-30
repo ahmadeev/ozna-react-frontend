@@ -30,12 +30,6 @@ const HomePage = observer(() => {
     }*/
 
     useEffect(() => {
-        return () => {
-            webSocketStore.closeWebSockets(parameters);
-        }
-    }, [])
-
-    useEffect(() => {
         console.log("РЕНДЕР")
 
         ws.current = webSocketStore.getWebSocket(parameter);
