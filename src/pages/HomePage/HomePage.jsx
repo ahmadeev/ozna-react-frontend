@@ -8,7 +8,7 @@ import {observer} from "mobx-react-lite";
 
 
 const GRAPH_NUMBER_OF_ELEMENTS = 50;
-const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 1_000; // 1_000 * 60 * 10 ms == 10 min
+const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 1_000 * 60 * 10; // 1_000 * 60 * 10 ms == 10 min
 const TABLE_AND_GRAPH_CHECK_UP_TIME = TABLE_AND_GRAPH_ELEMENT_LIVE_TIME;
 
 const MIN_INTEGER_VALUE = -2_147_483_648;
