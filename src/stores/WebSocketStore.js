@@ -25,6 +25,7 @@ class WebSocketStore {
         }
         ws.onmessage = (e) => {
             console.log(`Получено сообщение для ${parameter}:`, e.data);
+            this.handleMessage(parameter, e.data);
         }
         ws.onerror = (e) => {
             console.error(`Ошибка WebSocket (${parameter}):`, e);
@@ -40,7 +41,16 @@ class WebSocketStore {
     }
 
     closeWebSocket(parameter) {
-        this.websockets[parameter].close();
+        const ws = this.websockets[parameter];
+        if (ws && (ws?.readyState === WebSocket.OPEN || ws?.readyState === WebSocket.CONNECTING)) {
+            ws.close();
+        }
+    }
+
+    closeWebSockets(parameters) {
+        parameters.forEach((parameter) => {
+            this.closeWebSocket(parameter);
+        })
     }
 
     startPing(parameter, interval = 75_000) {
@@ -69,6 +79,7 @@ class WebSocketStore {
 
     registerMessageHandler(parameter, handler) {
         this.messageHandlers[parameter] = handler;
+        console.log(`Зарегистрирован обработчик для ${parameter}`);
     }
 
     sendMessage(parameter, message) {
@@ -97,6 +108,7 @@ class WebSocketStore {
     cleanup(parameter) {
         this.stopPing(parameter);
         delete this.websockets[parameter];
+        delete this.messageHandlers[parameter];
     }
 }
 

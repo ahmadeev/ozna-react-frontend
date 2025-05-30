@@ -3,102 +3,76 @@ import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import LocalTable from "../../components/Table/LocalTable.jsx";
 import Chart from "../../components/Chart/Chart.jsx";
 import dataStore from "../../stores/DataStore.js";
+import webSocketStore from "../../stores/WebSocketStore.js";
 import {observer} from "mobx-react-lite";
 
+
+const GRAPH_NUMBER_OF_ELEMENTS = 50;
+const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 10_000; // 1_000 * 60 * 10 ms == 10 min
+const TABLE_AND_GRAPH_CHECK_UP_TIME = TABLE_AND_GRAPH_ELEMENT_LIVE_TIME;
+
+const MIN_INTEGER_VALUE = -2_147_483_648;
+const MAX_INTEGER_VALUE = 2_147_483_647;
+
+const parameters = ["parameter_1", "parameter_2"];
+
 const HomePage = observer(() => {
-
-    const GRAPH_NUMBER_OF_ELEMENTS = 50;
-    const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 1_000 * 60 * 10; // 1_000 * 60 * 10 ms == 10 min
-    const TABLE_AND_GRAPH_CHECK_UP_TIME = TABLE_AND_GRAPH_ELEMENT_LIVE_TIME;
-
-    const MIN_INTEGER_VALUE = -2_147_483_648;
-    const MAX_INTEGER_VALUE = 2_147_483_647;
-
-    const parameters = ["parameter_1", "parameter_2"];
     const [parameter, setParameter] = useState(parameters[0]);
-
-    const [values, setValues] = useState([]);
+    const values = dataStore.generatedData[parameter] || [];
 
     const ws = useRef(null);
-    const timer = useRef(null);
-    const PING_INTERVAL = 75_000;
 
     // const cleaningTimerId = useRef(null);
 
-    const cleanUpGeneratedData = (data, setData, interval) => {
+/*    const cleanUpGeneratedData = (data, setData, interval) => {
         const now = Date.now();
         setData(data.filter(item => now - item.dt <= interval));
-    }
+    }*/
 
     useEffect(() => {
-        ws.current = new WebSocket("ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
+        return (
+            webSocketStore.closeWebSockets(parameters)
+        );
+    }, [])
 
-        /* обработчики сохраняют (замораживают) состояние ? */
+    useEffect(() => {
+        console.log("РЕНДЕР")
 
-        const startPinging = () => {
-            if (timer.current) clearInterval(timer.current);
+        ws.current = webSocketStore.getWebSocket(parameter);
+        if (!ws.current) {
+            ws.current = webSocketStore.openWebSocket(parameter, "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
 
-            const sendPing = () => {
-                if (ws.current?.readyState === WebSocket.OPEN) {
-                    ws.current.send(JSON.stringify({ type: 'ping' }));
+            const handleMessage = (message) => {
+                // wa: грубо
+                if (Object.keys(message).length === 3 && message.id && message.dt && message.value) {
+                    console.log("msg: ", message)
+                    message.dt = Date.parse(message.dt);
+                    dataStore.pushGeneratedDate(parameter, message)
                 }
             };
 
-            sendPing();
+            webSocketStore.registerMessageHandler(parameter, handleMessage);
+        }
 
-            timer.current = setInterval(sendPing, PING_INTERVAL);
-        };
+        /* обработчики сохраняют (замораживают) состояние ? */
 
-        let cleaningTimerId = null;
+/*        let cleaningTimerId = null;
         const startCleaning = () => {
             const cleanOnce = () => {
                 cleanUpGeneratedData(values, setValues, TABLE_AND_GRAPH_ELEMENT_LIVE_TIME);
                 console.log("очищено")
             }
-
             cleanOnce();
-
             cleaningTimerId = setInterval(cleanOnce, TABLE_AND_GRAPH_CHECK_UP_TIME);
         }
-
-        const handleOpen = (e) => {
-            console.log("Вебсокет открыт")
-            startPinging();
-            startCleaning();
-        }
-
-        const handleMessage = (e) => {
-            const json = JSON.parse(e.data);
-
-            if (json.type && json.type === "pong") return;
-
-            // wa: грубо
-            if (Object.keys(json).length === 3 && json.id && json.dt && json.value) {
-                json.dt = Date.parse(json.dt);
-                setValues(prev => {
-                    return [ ...prev, json ];
-                });
-            }
-        };
-
-        const handleError = (e) => {}
-        const handleClose = (e) => {
-            console.log("Вебсокет закрыт");
-        }
-
-        ws.current.onopen = handleOpen;
-        ws.current.onmessage = handleMessage;
-        ws.current.onerror = handleError;
-        ws.current.onclose = handleClose;
+        startCleaning();*/
 
         return () => {
-            if (timer.current) clearInterval(timer.current);
-            if (cleaningTimerId) clearInterval(cleaningTimerId);
-            if (ws.current) ws.current.close();
-            // note: сохранять в стор
+            // if (cleaningTimerId) clearInterval(cleaningTimerId);
         }
-    }, [])
+    }, [parameter])
 
+    // ------------
     const [minValue, setMinValue] = useState("0");
     const [maxValue, setMaxValue] = useState("99");
     const [frequency, setFrequency] = useState("1000");
@@ -106,8 +80,22 @@ const HomePage = observer(() => {
     // повторная инициализация функции только при изменении зависимостей
     const isValidInteger = useCallback((number) => {
         return number >= MIN_INTEGER_VALUE && number <= MAX_INTEGER_VALUE;
-    }, [MIN_INTEGER_VALUE, MAX_INTEGER_VALUE])
+    }, [])
 
+    const isMinValueValid = useMemo(() => {
+        return minValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
+    }, [minValue, maxValue, isValidInteger]);
+    const isMaxValueValid = useMemo(() => {
+        return maxValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
+    }, [minValue, maxValue, isValidInteger]);
+    const isMinMaxValuesValid = useMemo(() => {
+        return isMinValueValid && isMaxValueValid;
+    }, [isMinValueValid, isMaxValueValid]);
+    const isFrequencyValid = useMemo(() => {
+        return frequency.match(/^[1-9]\d*$/) && parseInt(frequency) > 0 && isValidInteger(frequency);
+    }, [frequency, isValidInteger]);
+
+    // ------------
     // храним
     const settingsRef = useRef({ minValue, maxValue, frequency });
 
@@ -115,13 +103,6 @@ const HomePage = observer(() => {
     useEffect(() => {
         settingsRef.current = { minValue, maxValue, frequency };
     }, [minValue, maxValue, frequency]);
-
-    const latestValues = useRef(values);
-
-    useEffect(() => {
-        latestValues.current = values;
-        console.log(latestValues.current)
-    }, [values]);
 
     useEffect(() => {
         // при первой загрузке:
@@ -141,42 +122,11 @@ const HomePage = observer(() => {
             setFrequency("1000");
         }
 
-        const data = dataStore.generatedData[parameter];
-        if (data) {
-            setValues(data);
-        } else {
-            setValues([]);
-        }
-
         return () => {
             // значения в стор
             dataStore.updateGenerationSettings(parameter, settingsRef.current);
-
-            dataStore.updateGeneratedData(parameter, latestValues.current);
-
-            // wa: грубо, закидывает другие параметры, если быстро менять
-            ws.current.send(JSON.stringify({
-                id: parameter,
-                max: maxValue,
-                min: minValue,
-                run: false,
-                frequency: frequency
-            }));
         };
     }, [parameter]);
-
-    const isMinValueValid = useMemo(() => {
-        return minValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
-    }, [minValue, maxValue, isValidInteger]);
-    const isMaxValueValid = useMemo(() => {
-        return maxValue.match(/^-?\d+$/) && parseInt(minValue) <= parseInt(maxValue) && isValidInteger(minValue) && isValidInteger(maxValue);
-    }, [minValue, maxValue, isValidInteger]);
-    const isMinMaxValuesValid = useMemo(() => {
-        return isMinValueValid && isMaxValueValid;
-    }, [isMinValueValid, isMaxValueValid]);
-    const isFrequencyValid = useMemo(() => {
-        return frequency.match(/^[1-9]\d*$/) && parseInt(frequency) > 0 && isValidInteger(frequency);
-    }, [frequency, isValidInteger]);
 
     return (
         <>

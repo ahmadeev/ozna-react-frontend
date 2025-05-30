@@ -29,20 +29,38 @@ class DataStore {
 
     // action-функция меняет состояние
     updateGenerationSettings(parameter, settings) {
+        // console.log("обновление настроек", parameter);
+        // console.log(this.generationSettings[parameter]);
+
         this.generationSettings[parameter] = settings;
-        console.log("обновление настроек", parameter);
-        console.log(this.generationSettings[parameter]);
     }
 
     generatedData = {};
 
     updateGeneratedData(parameter, data) {
-        console.log("обновление вычисленных значений", parameter);
-        console.log(this.generatedData[parameter]);
+        // console.log("обновление вычисленных значений 1", parameter);
+        // console.log(this.generatedData[parameter]);
 
         if (!data || data.length === 0) return;
+        if (!this.generatedData[parameter] && this.generatedData[parameter] === undefined) {
+            this.generatedData[parameter] = [data];
+            return;
+        }
 
         this.generatedData[parameter] = [...data];
+    }
+
+    pushGeneratedDate(parameter, data) {
+        // console.log("обновление вычисленных значений 2", parameter);
+        // console.log(this.generatedData[parameter]);
+
+        if (!data || data.length === 0) return;
+        if (!this.generatedData[parameter] && this.generatedData[parameter] === undefined) {
+            this.generatedData[parameter] = [data];
+            return;
+        }
+
+        this.generatedData[parameter] = [...this.generatedData[parameter], data];
     }
 }
 
