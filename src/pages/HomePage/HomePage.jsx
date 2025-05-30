@@ -34,7 +34,6 @@ const HomePage = observer(() => {
             const handleMessage = (message) => {
                 // wa: грубо
                 if (Object.keys(message).length === 3 && message.id && message.dt && message.value) {
-                    console.log("msg: ", message)
                     message.dt = Date.parse(message.dt);
                     dataStore.pushGeneratedData(parameter, message)
                 }
@@ -124,7 +123,7 @@ const HomePage = observer(() => {
                 {/* --- note */}
                 <div className={styles.row} style={{ padding: "0", gap: "0" }}>
                     <div
-                        className={styles.column_plug}
+                        className={styles.column_plug + " " + styles.tab + " " + styles.first_tab}
                         style={{
                             height: "3rem",
                             cursor: "pointer",
@@ -143,7 +142,7 @@ const HomePage = observer(() => {
                         />
                     </div>
                     <div
-                        className={styles.column_plug}
+                        className={styles.column_plug + " " + styles.tab + " " + styles.last_tab}
                         style={{
                             height: "3rem",
                             cursor: "pointer",
@@ -167,7 +166,7 @@ const HomePage = observer(() => {
                 <div className={styles.row}>
                     {/* Левый блок */}
                     <div className={styles.column}>
-                        <div className={styles.row_plug}>
+                        <div className={styles.row}>
                             <h3>Текущее значение: {<input type="text" disabled value={values[values.length - 1]?.value || "<отсутствует>"}/>}</h3>
                         </div>
 

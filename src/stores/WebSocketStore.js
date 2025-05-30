@@ -24,7 +24,7 @@ class WebSocketStore {
             this.startPing(parameter);
         }
         ws.onmessage = (e) => {
-            console.log(`Получено сообщение для ${parameter}:`, e.data);
+            // console.log(`Получено сообщение для ${parameter}:`, e.data);
             this.handleMessage(parameter, e.data);
         }
         ws.onerror = (e) => {
