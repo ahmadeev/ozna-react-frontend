@@ -8,7 +8,7 @@ import {observer} from "mobx-react-lite";
 
 
 const GRAPH_NUMBER_OF_ELEMENTS = 50;
-const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 10_000; // 1_000 * 60 * 10 ms == 10 min
+const TABLE_AND_GRAPH_ELEMENT_LIVE_TIME = 1_000; // 1_000 * 60 * 10 ms == 10 min
 const TABLE_AND_GRAPH_CHECK_UP_TIME = TABLE_AND_GRAPH_ELEMENT_LIVE_TIME;
 
 const MIN_INTEGER_VALUE = -2_147_483_648;
@@ -24,11 +24,6 @@ const HomePage = observer(() => {
 
     // const cleaningTimerId = useRef(null);
 
-/*    const cleanUpGeneratedData = (data, setData, interval) => {
-        const now = Date.now();
-        setData(data.filter(item => now - item.dt <= interval));
-    }*/
-
     useEffect(() => {
         console.log("РЕНДЕР")
 
@@ -41,7 +36,7 @@ const HomePage = observer(() => {
                 if (Object.keys(message).length === 3 && message.id && message.dt && message.value) {
                     console.log("msg: ", message)
                     message.dt = Date.parse(message.dt);
-                    dataStore.pushGeneratedDate(parameter, message)
+                    dataStore.pushGeneratedData(parameter, message)
                 }
             };
 
@@ -50,19 +45,20 @@ const HomePage = observer(() => {
 
         /* обработчики сохраняют (замораживают) состояние ? */
 
-/*        let cleaningTimerId = null;
+        let cleaningTimerId = null;
         const startCleaning = () => {
             const cleanOnce = () => {
-                cleanUpGeneratedData(values, setValues, TABLE_AND_GRAPH_ELEMENT_LIVE_TIME);
-                console.log("очищено")
+                parameters.forEach((parameter) => {
+                    dataStore.cleanupGeneratedData(parameter, TABLE_AND_GRAPH_ELEMENT_LIVE_TIME);
+                })
             }
             cleanOnce();
             cleaningTimerId = setInterval(cleanOnce, TABLE_AND_GRAPH_CHECK_UP_TIME);
         }
-        startCleaning();*/
+        startCleaning();
 
         return () => {
-            // if (cleaningTimerId) clearInterval(cleaningTimerId);
+            if (cleaningTimerId) clearInterval(cleaningTimerId);
         }
     }, [parameter])
 

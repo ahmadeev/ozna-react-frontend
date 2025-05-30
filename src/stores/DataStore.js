@@ -50,7 +50,7 @@ class DataStore {
         this.generatedData[parameter] = [...data];
     }
 
-    pushGeneratedDate(parameter, data) {
+    pushGeneratedData(parameter, data) {
         // console.log("обновление вычисленных значений 2", parameter);
         // console.log(this.generatedData[parameter]);
 
@@ -61,6 +61,11 @@ class DataStore {
         }
 
         this.generatedData[parameter] = [...this.generatedData[parameter], data];
+    }
+
+    cleanupGeneratedData(parameter, interval) {
+        const now = Date.now();
+        this.generatedData[parameter] = this.generatedData[parameter]?.filter(item => now - item.dt <= interval);
     }
 }
 
