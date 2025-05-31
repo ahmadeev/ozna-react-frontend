@@ -16,6 +16,9 @@ const MAX_INTEGER_VALUE = 2_147_483_647;
 
 const parameters = ["parameter_1", "parameter_2"];
 
+// const wsUrl = "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers"; // dev
+const wsUrl = "ws/random-numbers"; // prod
+
 const HomePage = observer(() => {
     const [parameter, setParameter] = useState(parameters[0]);
     const values = dataStore.generatedData[parameter] || [];
@@ -29,7 +32,7 @@ const HomePage = observer(() => {
 
         ws.current = webSocketStore.getWebSocket(parameter);
         if (!ws.current) {
-            ws.current = webSocketStore.openWebSocket(parameter, "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers");
+            ws.current = webSocketStore.openWebSocket(parameter, wsUrl);
 
             const handleMessage = (message) => {
                 // wa: грубо
