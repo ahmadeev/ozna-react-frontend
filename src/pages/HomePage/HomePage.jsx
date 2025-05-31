@@ -21,7 +21,7 @@ const wsUrl = "ws/random-numbers"; // prod
 
 const HomePage = observer(() => {
     const [parameter, setParameter] = useState(parameters[0]);
-    const values = dataStore.generatedData[parameter] || [];
+    const values = dataStore.generatedData.get(parameter) || []; // todo: так ли нужны эти геттеры?
 
     const ws = useRef(null);
 
@@ -115,7 +115,6 @@ const HomePage = observer(() => {
         }
 
         return () => {
-            // значения в стор
             dataStore.updateGenerationSettings(parameter, settingsRef.current);
         };
     }, [parameter]);
