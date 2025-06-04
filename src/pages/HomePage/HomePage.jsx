@@ -22,6 +22,7 @@ const wsUrl = "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers"
 
 const HomePage = observer(() => {
     const [parameter, setParameter] = useState(parameters[0]);
+    // в dt спаршенное в int из UTC-string, пришедшей с бэка (хоть и есть приведения типов)
     const values = dataStore.generatedData.get(parameter) || []; // todo: так ли нужны эти геттеры?
 
     const ws = useRef(null);
@@ -337,11 +338,19 @@ const HomePage = observer(() => {
 
                             <LocalTable
                                 headers={["dt", "value"]}
+                                renderHeaders={(headers) => {
+                                    return (
+                                        <tr>
+                                            <th>date</th>
+                                            <th>value</th>
+                                        </tr>
+                                    );
+                                }}
                                 data={values}
                                 renderData={(item, rowIndex) => {
                                     return (
                                         <tr key={rowIndex}>
-                                            <td>{new Date(parseInt(item.dt)).toUTCString()}</td>
+                                            <td>{new Date(parseInt(item.dt)).toLocaleString()}</td>
                                             <td>{item.value}</td>
                                         </tr>
                                     );
