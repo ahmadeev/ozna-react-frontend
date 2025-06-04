@@ -5,6 +5,7 @@ import Chart from "../../components/Chart/Chart.jsx";
 import dataStore from "../../stores/DataStore.js";
 import webSocketStore from "../../stores/WebSocketStore.js";
 import {observer} from "mobx-react-lite";
+import {toJS} from "mobx";
 
 
 const GRAPH_NUMBER_OF_ELEMENTS = 50;
@@ -16,8 +17,8 @@ const MAX_INTEGER_VALUE = 2_147_483_647;
 
 const parameters = ["parameter_1", "parameter_2"];
 
-// const wsUrl = "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers"; // dev
-const wsUrl = "ws/random-numbers"; // prod
+const wsUrl = "ws://localhost:25000/java-backend-1.0-SNAPSHOT/ws/random-numbers"; // dev
+// const wsUrl = "ws/random-numbers"; // prod
 
 const HomePage = observer(() => {
     const [parameter, setParameter] = useState(parameters[0]);
@@ -118,6 +119,39 @@ const HomePage = observer(() => {
             dataStore.updateGenerationSettings(parameter, settingsRef.current);
         };
     }, [parameter]);
+
+    // ------------ note: new feature #1
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
+    // timestamp -> JS Date --...--> result
+    const getDateString = (startDate, endDate) => {
+        startDate = new Date(startDate);
+        endDate = new Date(endDate);
+        return `${startDate.getFullYear()}${String(startDate.getMonth() + 1).padStart(2, "0")}${String(startDate.getDate()).padStart(2, "0")}-${String(startDate.getHours()).padStart(2, "0")}${String(startDate.getMinutes()).padStart(2, "0")}` + "_" +
+            `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2, "0")}${String(endDate.getDate()).padStart(2, "0")}-${String(endDate.getHours()).padStart(2, "0")}${String(endDate.getMinutes()).padStart(2, "0")}`;
+    }
+
+    const downloadJsonData = (data, filename) => {
+        let blob = null;
+        let url = null;
+        let link = null;
+        try {
+            blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+            url = URL.createObjectURL(blob);
+
+            link = document.createElement("a");
+            link.href = url;
+            link.download = `${filename}.json`;
+            link.click();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // link?.remove(); // необходимо, если добавляли в DOM
+            URL.revokeObjectURL(url);
+        }
+    }
+    // ------------
 
     return (
         <>
@@ -241,6 +275,64 @@ const HomePage = observer(() => {
 
                     {/* Правый блок */}
                     <div className={styles.column}>
+                        {/* ------------ note: new feature #1 */}
+                        <div className={styles.row_plug}>
+                            <div className={styles.column_grid}>
+                                <label>
+                                    <span>start: </span>
+                                    <input
+                                        type="datetime-local"
+                                        value={startDate}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            console.log(Date.parse(e.target.value));
+                                        }}
+                                    />
+                                </label>
+                                <label>
+                                    <span>end: </span>
+                                    <input
+                                        type="datetime-local"
+                                        value={endDate}
+                                        onChange={(e) => {
+                                            setEndDate(e.target.value);
+                                            console.log(Date.parse(e.target.value));
+                                        }}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className={styles.row} style={{borderRadius: "0 0 1rem 1rem"}}>
+                                <button style={{width: "100%"}} onClick={() => {
+                                    if (startDate > endDate) {
+                                        console.log("незагрузка: невалидный ввод даты");
+                                        return;
+                                    }
+
+                                    if (!values || values.length <= 0) {
+                                        console.log("незагрузка: невалидный или пустой список значений (общий)");
+                                        return;
+                                    }
+
+                                    const sDate = Date.parse(startDate);
+                                    const eDate = Date.parse(endDate);
+
+                                    const data = toJS(values).filter((item) => item.dt >= sDate && item.dt <= eDate);
+
+                                    if (!data || data.length <= 0) {
+                                        console.log("незагрузка: невалидный или пустой список значений (после выборки)");
+                                        return;
+                                    }
+
+                                    const filename = getDateString(startDate, endDate);
+
+                                    downloadJsonData(data, filename);
+                                }}>download
+                                </button>
+                            </div>
+                        </div>
+                        {/* ------------ */}
+
                         <div className={styles.row_plug}>
 
                             <LocalTable
@@ -262,7 +354,7 @@ const HomePage = observer(() => {
                 {/* Нижний блок */}
                 <div className={styles.row}>
                     <div className={styles.column_plug}>
-                        <Chart data={values.slice(-GRAPH_NUMBER_OF_ELEMENTS)} />
+                        <Chart data={values.slice(-GRAPH_NUMBER_OF_ELEMENTS)}/>
                     </div>
                 </div>
             </div>

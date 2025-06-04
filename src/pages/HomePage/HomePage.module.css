@@ -18,6 +18,7 @@ div {
 .row {
     width: 100%;
     box-sizing: border-box;
+    box-shadow: var(--primary-shadow);
 
     padding: 1.5rem;
 
@@ -26,19 +27,20 @@ div {
     gap: 1rem;
 
     justify-content: start;
-
-    box-shadow: var(--primary-shadow);
 }
 
 .row_plug {
     width: 100%;
     box-sizing: border-box;
     box-shadow: var(--primary-shadow);
+
+/*    padding: 1.5rem;*/
 }
 
 .column {
     width: 100%;
     box-sizing: border-box;
+    /*    box-shadow: var(--primary-shadow);*/
 
 /*    padding: 1.5rem;*/
 
@@ -47,8 +49,6 @@ div {
     gap: 1rem;
 
     align-items: start;
-
-/*    box-shadow: var(--primary-shadow);*/
 }
 
 .column_plug {
